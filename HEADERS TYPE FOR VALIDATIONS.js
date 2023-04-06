@@ -1,4 +1,4 @@
-hb = {
+Headers = {
   'text/html': 'HTML|HTM',
   'text/css': 'CSS',
   'text/javascript': 'JS|JSON',
