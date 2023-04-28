@@ -82,6 +82,7 @@ function extractLinksFromCurrentTab() {
         const sender = new Connector();
         await sender.postMessage({
           length_of_links: response.links.length,
+          main_url : response.url,
           links_exracted: response.links,
         });
       }

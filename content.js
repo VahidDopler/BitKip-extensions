@@ -12,6 +12,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log('Current URL:', currentUrl);
     console.log('Links:', links);
 
-    sendResponse({ links: links });
+    sendResponse({ links: links , url :currentUrl  });
   }
 });
