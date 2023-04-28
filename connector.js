@@ -10,25 +10,24 @@ class Connector {
     this.connected = false;
   }
 
-  postMessage(data) {
-    fetch(APP_BASE_URL, {
-      method: 'POST',
-      mode: 'cors',
-      cache: 'no-cache',
-      credentials: 'same-origin',
-      // headers: {
-      //   'Content-Type': 'application/x-www-form-urlencoded',
-      // },
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Disposition': 'attachment; filename="cool.html"',
-      },
-      redirect: 'follow',
-      referrerPolicy: 'no-referrer',
-      body: JSON.stringify(data),
-    })
-      .then((recieve) => console.log(recieve))
-      .catch((err) => {});
+  async postMessage(data) {
+    try {
+      await fetch(APP_BASE_URL, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Disposition': 'attachment; filename="cool.html"',
+        },
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer',
+        body: JSON.stringify(data),
+      });
+    } catch (error) {
+      console.log(error.messaage);
+    }
   }
 }
 
@@ -70,14 +69,27 @@ function triggerDownload(url, filename, referer, size, mime) {
   });
 }
 
-//get infos of tab to make download link infos
-//man shak daram vage an mofid hast ya na 🤣
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  // Get the URL of the active tab
-  chrome.tabs.get(activeInfo.tabId, (tab) => {
-    // Pass the URL to the connector function
+//////////////////////////////////////////////////////////////////////////////////
+// Function to extract all links from the current tab
+
+function extractLinksFromCurrentTab() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(
+      tabs[0].id,
+      'extract_links',
+      async function (response) {
+        console.log(response.links);
+        const sender = new Connector();
+        await sender.postMessage({
+          length_of_links: response.links.length,
+          links_exracted: response.links,
+        });
+      }
+    );
   });
-});
+}
+
+/////////////////////////////////////////////
 
 //check link to be valid or not
 function isSupportedProtocol(url) {
@@ -132,6 +144,9 @@ function onMenuClicked(info, tab) {
   if (info.menuItemId == 'download-image-link') {
     sendImageToBitKip(info, tab);
   }
+  if (info.menuItemId == 'download-all-links-in-this-page') {
+    extractLinksFromCurrentTab();
+  }
 }
 
 //Adding menus to right-click
@@ -146,6 +161,12 @@ chrome.contextMenus.removeAll(function () {
     id: 'download-image-link',
     title: 'Download Image with BitKip',
     contexts: ['image'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'download-all-links-in-this-page',
+    title: 'Download all links with Bitkip with BitKip',
+    contexts: ['link', 'video', 'audio', 'all'],
   });
 });
 
@@ -166,23 +187,23 @@ chrome.downloads.onDeterminingFilename.addListener((downloadItem, suggest) => {
   if (!referrer && downloadItem.finalUrl !== downloadItem.url) {
     referrer = downloadItem.url;
   }
-  
-  fetch(downloadItem.finalUrl)
-  .then(response => {
-    console.log(response.headers.get('content-type'));
-  })
-  .catch(error => {
-    console.error(error);
-  });
 
-  //starting to process on link 
-  // if (shouldTakeOver(url)) {
-  //   triggerDownload(
-  //     url,
-  //     downloadItem.filename,
-  //     referrer,
-  //     downloadItem.fileSize,
-  //     downloadItem.mime
-  //   );
-  // }
+  fetch(downloadItem.finalUrl)
+    .then((response) => {
+      console.log(response.headers.get('content-type'));
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+  //starting to process on link
+  if (shouldTakeOver(url)) {
+    triggerDownload(
+      url,
+      downloadItem.filename,
+      referrer,
+      downloadItem.fileSize,
+      downloadItem.mime
+    );
+  }
 });
