@@ -69,7 +69,6 @@ function triggerDownload(url, filename, referer, size, mime) {
   });
 }
 
-//////////////////////////////////////////////////////////////////////////////////
 // Function to extract all links from the current tab
 
 function extractLinksFromCurrentTab() {
@@ -90,7 +89,6 @@ function extractLinksFromCurrentTab() {
   });
 }
 
-/////////////////////////////////////////////
 
 //check link to be valid or not
 function isSupportedProtocol(url) {
@@ -171,6 +169,7 @@ chrome.contextMenus.removeAll(function () {
   });
 });
 
+//listener for string pattern and find links using pattern and send to local
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type == 'exatractLinkswithSpecificString') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -180,17 +179,20 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         async function (response) {
           console.log(response.links);
           const sender = new Connector();
-          // await sender.postMessage({
-          //   length_of_links: response.links.length,
-          //   main_url: response.url,
-          //   links_exracted: response.links,
-          // });
+          await sender.postMessage({
+            length_of_links: response.links.length,
+            main_url: response.url,
+            links_exracted: response.links,
+          });
         }
       );
     });
   }
   return true;
 });
+
+//listener for regex pattern and find links using pattern and send to local
+
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.type == 'exatractLinkswithSpecificRegex') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -200,11 +202,11 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
         async function (response) {
           console.log(response.links);
           const sender = new Connector();
-          // await sender.postMessage({
-          //   length_of_links: response.links.length,
-          //   main_url: response.url,
-          //   links_exracted: response.links,
-          // });
+          await sender.postMessage({
+            length_of_links: response.links.length,
+            main_url: response.url,
+            links_exracted: response.links,
+          });
         }
       );
     });
