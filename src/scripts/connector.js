@@ -20,6 +20,32 @@ const postLinks = (data) => {
 }
 
 
+const loadedContentScripts = {};
+// listener for string pattern and find links using pattern and send to local
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    switch (message.type) {
+        case "captcha":
+            const tabId = sender.tab.id;
+            loadedContentScripts[tabId] = false;
+            sendResponse({isOk: true});
+            break;
+        case "storeFirstUrl":
+            const tabId2 = sender.tab.id;
+            if (!loadedContentScripts[tabId2]) {
+                sendResponse({isOk: true});
+                loadedContentScripts[tabId2] = true;
+            } else sendResponse({isOk: false});
+            break;
+        case "extractSimilarLinks":
+        case "extractLinksWithRegex":
+            const [tab] = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
+            const resData = await chrome.tabs.sendMessage(tab.id, message);
+            postLinks(resData)
+            break
+    }
+});
+
+
 const downloadTrigger = (downloadItem, suggest) => {
 
     console.log(downloadItem);
@@ -70,40 +96,6 @@ chrome.contextMenus.removeAll(() => {
     });
 });
 
-// listener for string pattern and find links using pattern and send to local
-chrome.runtime.onMessage.addListener((message) => {
-    console.log(message)
-
-    console.log("here")
-    // const currentUrl = window.location.href;
-    // if (currentUrl.includes('recaptcha')) {
-    //     return;
-    // }
-    // switch (message.type) {
-    //     case "extractSimilarLinks":
-    //         extractSimilarLinks(message.linkPattern);
-    //         break;
-    //     case "extractLinksWithRegex":
-    //         extractLinksWithRegex();
-    //         break;
-    // }
-
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-        console.log(tabs);
-        chrome.tabs.sendMessage(
-            tabs[0].id,
-            message,
-            async (response) => {
-                await console.log(response.links);
-                await postMessage({
-                    baseUrl: response.url,
-                    size: response.links.length,
-                    urls: response.links,
-                });
-            }
-        );
-    });
-});
 
 const extractSimilarLinks = (linkPattern) => {
     const links = [];

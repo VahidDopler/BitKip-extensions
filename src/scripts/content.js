@@ -1,110 +1,34 @@
-/*
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-    if (message.type === 'extract_links') {
-        // var links = [];
-        // for (var i = document.links.length; i-- > 0; ) {
-        //   if (document.links[i].hostname === location.hostname) {
-        //     links.push(document.links[i].href);
-        //   }
-        // }
-
-        // const currentUrl = location.hostname;
-
-        // // send links to background.js or do something else with them
-        // console.log('Current URL:', currentUrl);
-        // console.log('Links:', links);
-
-        // sendResponse({ links: links, url: currentUrl });
-
-        var links = [];
-        var allLinks = document.querySelectorAll('a');
-
-        for (var i = 0; i < allLinks.length; i++) {
-            links.push(allLinks[i].href);
-        }
-        setTimeout(function () {
-            // Code to access webpage content goes here
-        }, 5000); // Delay for 5 seconds
-
-        // send links to background.js or do something else with them
-        console.log('Current URL:', currentUrl);
-        console.log('Links:', links);
-
-        sendResponse({links: links, url: currentUrl});
-    } else if (message.order == 'getLinks-speicfic-string') {
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('recaptcha')) {
-            return;
-        }
-        var links = [];
-        var allLinks = document.querySelectorAll('a');
-
-        for (var i = 0; i < allLinks.length; i++) {
-            links.push(allLinks[i].href);
-        }
-        console.log(message.linkRegex);
-
-        const filtered_links = [];
-
-        for (let index = 0; index < links.length; index++) {
-            if (links[index].includes(message.linkRegex))
-                filtered_links.push(links[index]);
-        }
-        console.log(filtered_links);
-        sendResponse({links: filtered_links});
-    } else if (message.order == 'getLinks-speicfic-regex') {
-        const currentUrl = window.location.href;
-        if (currentUrl.includes('recaptcha')) {
-            return;
-        }
-        var links = [];
-        var allLinks = document.querySelectorAll('a');
-
-        for (var i = 0; i < allLinks.length; i++) {
-            links.push(allLinks[i].href);
-        }
-        console.log(message.linkRegex);
-
-        const filtered_links = [];
-        const regex = new RegExp(message.linkRegex);
-        console.log(regex);
-        console.log(links.length);
-        for (let index = 0; index < links.length; index++) {
-            if (regex.test(links[index])) filtered_links.push(links[index]);
-        }
-        console.log(filtered_links);
-        sendResponse({links: filtered_links});
-    }
+const url = window.location.href;
+// store first loaded url
+// some pages load more than once like soft98 pages. this is how to prevent
+chrome.runtime.sendMessage({type: "storeFirstUrl", loadedUrl: url}, (res) => {
+    if (res.isOk)
+        chrome.runtime.onMessage.addListener(listen);
 });
-*/
 
-
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-    console.log("here")
+const listen = (message, sender, sendResponse) => {
     const currentUrl = window.location.href;
     if (currentUrl.includes('recaptcha')) {
+        sendResponse({type: "captcha"});
         return;
     }
     switch (message.type) {
         case "extractSimilarLinks":
-            extractSimilarLinks(message.linkPattern);
+            extractSimilarLinks(message.linkPattern, currentUrl, sendResponse);
             break;
         case "extractLinksWithRegex":
             extractLinksWithRegex();
             break;
     }
-});
+};
 
-const extractSimilarLinks = (linkPattern) => {
+const extractSimilarLinks = (linkPattern, baseUrl, sendResponse) => {
     const links = [];
     const allLinks = document.querySelectorAll('a');
-
-    for (let li of allLinks)
-        if (li.includes(linkPattern))
-            links.push(li);
-
-    console.log(links)
-
+    for (let a of allLinks)
+        if (a.href.includes(linkPattern))
+            links.push(a.href);
+    sendResponse({links, baseUrl});
 }
 
 
