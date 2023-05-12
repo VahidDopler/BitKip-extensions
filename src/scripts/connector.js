@@ -21,20 +21,19 @@ const postLinks = (data) => {
 
 
 const loadedContentScripts = {};
-// listener for string pattern and find links using pattern and send to local
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     switch (message.type) {
         case "captcha":
             const tabId = sender.tab.id;
             loadedContentScripts[tabId] = false;
-            sendResponse({isOk: true});
+            sendResponse({isOkToAddListener: true});
             break;
         case "storeFirstUrl":
             const tabId2 = sender.tab.id;
             if (!loadedContentScripts[tabId2]) {
-                sendResponse({isOk: true});
+                sendResponse({isOkToAddListener: true});
                 loadedContentScripts[tabId2] = true;
-            } else sendResponse({isOk: false});
+            } else sendResponse({isOkToAddListener: false});
             break;
         case "extractSimilarLinks":
         case "extractLinksWithRegex":
@@ -47,9 +46,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 
 const downloadTrigger = (downloadItem, suggest) => {
-
-    console.log(downloadItem);
-    console.log(suggest)
     // Prevent the download from starting
     suggest({cancel: true, filename: downloadItem.filename});
     chrome.downloads.cancel(downloadItem.id, () =>
@@ -60,6 +56,7 @@ const downloadTrigger = (downloadItem, suggest) => {
     // final url is used when url itself is a redirecting link
     let url = downloadItem.finalUrl || downloadItem.url;
 
+    // todo: maybe fetch accept-ranges in the application
     fetch(url)
         .then((response) => {
             if (isSupportedProtocol(url)) {
@@ -96,18 +93,6 @@ chrome.contextMenus.removeAll(() => {
     });
 });
 
-
-const extractSimilarLinks = (linkPattern) => {
-    const links = [];
-    const allLinks = document.querySelectorAll('a');
-
-    for (let li of allLinks)
-        if (li.includes(linkPattern))
-            links.push(li);
-
-    console.log(links)
-
-}
 
 //check link to be valid or not
 const isSupportedProtocol = (url) => {

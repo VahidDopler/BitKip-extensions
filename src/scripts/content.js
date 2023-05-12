@@ -2,7 +2,7 @@ const url = window.location.href;
 // store first loaded url
 // some pages load more than once like soft98 pages. this is how to prevent
 chrome.runtime.sendMessage({type: "storeFirstUrl", loadedUrl: url}, (res) => {
-    if (res.isOk)
+    if (res.isOkToAddListener)
         chrome.runtime.onMessage.addListener(listen);
 });
 
