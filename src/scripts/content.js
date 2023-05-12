@@ -12,17 +12,18 @@ const listen = (message, sender, sendResponse) => {
         sendResponse({type: "captcha"});
         return;
     }
+    const parameter = {linkPattern: message.linkPattern, currentUrl, sendResponse};
     switch (message.type) {
         case "extractSimilarLinks":
-            extractSimilarLinks(message.linkPattern, currentUrl, sendResponse);
+            extractSimilarLinks(parameter);
             break;
         case "extractLinksWithRegex":
-            extractLinksWithRegex();
+            extractLinksWithRegex(parameter);
             break;
     }
 };
 
-const extractSimilarLinks = (linkPattern, baseUrl, sendResponse) => {
+const extractSimilarLinks = ({linkPattern, baseUrl, sendResponse}) => {
     const links = [];
     const allLinks = document.querySelectorAll('a');
     for (let a of allLinks)
@@ -32,6 +33,12 @@ const extractSimilarLinks = (linkPattern, baseUrl, sendResponse) => {
 }
 
 
-const extractLinksWithRegex = () => {
-
+const extractLinksWithRegex = ({linkPattern, baseUrl, sendResponse}) => {
+    const reg = new RegExp(linkPattern);
+    const links = [];
+    const allLinks = document.querySelectorAll('a');
+    for (let a of allLinks)
+        if (reg.test(a.href))
+            links.push(a.href);
+    sendResponse({links, baseUrl});
 }
