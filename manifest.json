@@ -1,9 +1,9 @@
 {
-  "name": "BitKip extension Downloader ",
+  "name": "BitKip extension",
   "action": {},
   "manifest_version": 3,
   "version": "1.0",
-  "description": "Download BitKip.",
+  "description": "Works with BitKip application",
   "host_permissions": ["*://*/*"],
   "permissions": [
     "downloads",
@@ -16,20 +16,20 @@
     "scripting"
   ],
   "background": {
-    "service_worker": "connector.js",
+    "service_worker": "./src/scripts/connector.js",
     "type": "module"
   },
   "content_scripts": [
     {
       "all_frames": true,
       "matches": ["http://*/*", "https://*/*", "ftp://*/*", "file:///*"],
-      "js": ["content.js"]
+      "js": ["./src/scripts/content.js"]
     }
   ],
   
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "./src/resources/icons/icon16.png",
+    "48": "./src/resources/icons/icon48.png",
+    "128": "./src/resources/icons/icon128.png"
   }
 }

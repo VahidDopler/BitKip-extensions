@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Extract Links</title>
+    <link rel="stylesheet" href="./main.css">
+</head>
+<body>
+<div class="header">Extract Links</div>
+<form id="form">
+    <input type="radio" id="similarOption" checked/>
+    <label for="similarOption">Extract similar links</label>
+    <br/>
+    <input type="radio" id="regexOption" value="regex"/>
+    <label for="regexOption">Extract using regular expression</label>
+    <br/>
+    <input type="text" id="linkInput" placeholder="Enter link pattern"/>
+    <input type="submit" value="Extract" id="extract"/>
+</form>
+</body>
+<script src="../scripts/extension-code.js"></script>
+</html>
