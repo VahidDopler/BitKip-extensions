@@ -37,8 +37,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             break;
         case "extractSimilarLinks":
         case "extractLinksWithRegex":
-            const [tab] = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
-            const resData = await chrome.tabs.sendMessage(tab.id, message);
+            const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
+            const resData = await chrome.tabs.sendMessage(tabs[0].id, message);
             postLinks(resData)
             break
     }
