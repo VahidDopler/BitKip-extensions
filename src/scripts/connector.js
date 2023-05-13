@@ -1,22 +1,26 @@
 'use strict';
 
-const postLinks = (data) => {
-    console.log(data);
+const postLinks = (data, isBatch) => {
 
-    // fetch(APP_BASE_URL, {
-    //     method: 'POST',
-    //     mode: 'cors',
-    //     cache: 'no-cache',
-    //     credentials: 'same-origin',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'Content-Disposition': 'attachment; filename="cool.html"',
-    //     },
-    //     redirect: 'follow',
-    //     referrerPolicy: 'no-referrer',
-    //     body: JSON.stringify(data),
-    // }).then(r => {
-    // });
+    let URL_TO_POST = "http://localhost:1354/single";
+
+    if (isBatch)
+        URL_TO_POST = "http://localhost:1354/batch";
+
+    fetch(URL_TO_POST, {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Disposition': 'attachment; filename="cool.html"',
+        },
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer',
+        body: JSON.stringify(data),
+    }).then(_ => {
+    });
 }
 
 
@@ -39,7 +43,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         case "extractLinksWithRegex":
             const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
             const resData = await chrome.tabs.sendMessage(tabs[0].id, message);
-            postLinks(resData)
+            postLinks(resData, true)
             break
     }
 });
@@ -67,7 +71,7 @@ const downloadTrigger = (downloadItem, suggest) => {
                     mimeType: downloadItem.mime,
                     resumable: response.headers.get('accept-ranges') === "bytes"
                 };
-                postLinks(data);
+                postLinks(data, false);
             }
         })
         .catch((error) => {
