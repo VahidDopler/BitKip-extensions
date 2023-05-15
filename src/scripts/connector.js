@@ -10,15 +10,6 @@ const postLinks = (data, isBatch) => {
 
     fetch(URL_TO_POST, {
         method: 'POST',
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Disposition': 'attachment; filename="cool.html"',
-        },
-        redirect: 'follow',
-        referrerPolicy: 'no-referrer',
         body: JSON.stringify(data),
     }).then(_ => {
     });
