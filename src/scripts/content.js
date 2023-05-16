@@ -20,6 +20,10 @@ const listen = (message, sender, sendResponse) => {
         case "extractLinksWithRegex":
             extractLinksWithRegex(parameter);
             break;
+        case "getUserAgent":
+            message.data.agent = window.navigator.userAgent;
+            sendResponse(message);
+            break;
     }
 };
 

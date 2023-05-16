@@ -1,6 +1,7 @@
 'use strict';
 
 const postLinks = (data, isBatch) => {
+    console.log(data)
 
     let URL_TO_POST = "http://localhost:1354/single";
 
@@ -9,15 +10,6 @@ const postLinks = (data, isBatch) => {
 
     fetch(URL_TO_POST, {
         method: 'POST',
-        mode: 'cors',
-        cache: 'no-cache',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Disposition': 'attachment; filename="cool.html"',
-        },
-        redirect: 'follow',
-        referrerPolicy: 'no-referrer',
         body: JSON.stringify(data),
     }).then(_ => {
     });
@@ -51,32 +43,37 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 
 const downloadTrigger = (downloadItem, suggest) => {
     // Prevent the download from starting
-    suggest({cancel: true, filename: downloadItem.filename});
-    chrome.downloads.cancel(downloadItem.id, () =>
-        chrome.downloads.erase({id: downloadItem.id})
-    );
-
     // get download link from Chrome Api
     // final url is used when url itself is a redirecting link
     let url = downloadItem.finalUrl || downloadItem.url;
+    console.log(downloadItem)
+    // only cancel urls if are supported
+    if (isSupportedProtocol(url)) {
+        suggest({cancel: true, filename: downloadItem.filename});
+        chrome.downloads.cancel(downloadItem.id, () =>
+            chrome.downloads.erase({id: downloadItem.id})
+        );
 
-    // todo: maybe fetch accept-ranges in the application
-    fetch(url)
-        .then((response) => {
-            if (isSupportedProtocol(url)) {
+        fetch(url)
+            .then( async (response) => {
+
+                const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
                 const data = {
                     url,
                     filename: downloadItem.filename,
                     fileSize: downloadItem.fileSize,
                     mimeType: downloadItem.mime,
-                    resumable: response.headers.get('accept-ranges') === "bytes"
+                    resumable: response.headers.get('accept-ranges') === "bytes",
+                    agent: null
                 };
-                postLinks(data, false);
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-        });
+                const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: "getUserAgent", data});
+                postLinks(resData.data, false);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }
+
 }
 
 //Main code to maintain download link and start doing job
