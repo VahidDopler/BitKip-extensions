@@ -46,6 +46,7 @@ const downloadTrigger = (downloadItem, suggest) => {
     // get download link from Chrome Api
     // final url is used when url itself is a redirecting link
     let url = downloadItem.finalUrl || downloadItem.url;
+    console.log(downloadItem)
     // only cancel urls if are supported
     if (isSupportedProtocol(url)) {
         suggest({cancel: true, filename: downloadItem.filename});
@@ -54,15 +55,19 @@ const downloadTrigger = (downloadItem, suggest) => {
         );
 
         fetch(url)
-            .then((response) => {
+            .then( async (response) => {
+
+                const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
                 const data = {
                     url,
                     filename: downloadItem.filename,
                     fileSize: downloadItem.fileSize,
                     mimeType: downloadItem.mime,
-                    resumable: response.headers.get('accept-ranges') === "bytes"
+                    resumable: response.headers.get('accept-ranges') === "bytes",
+                    agent: null
                 };
-                postLinks(data, false);
+                const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: "getUserAgent", data});
+                postLinks(resData.data, false);
             })
             .catch((error) => {
                 console.error(error);
