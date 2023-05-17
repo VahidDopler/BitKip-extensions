@@ -3,10 +3,10 @@
 const postLinks = (data, isBatch) => {
     console.log(data)
 
-    let URL_TO_POST = "http://localhost:1354/single";
+    let URL_TO_POST = "http://localhost:56423/single";
 
     if (isBatch)
-        URL_TO_POST = "http://localhost:1354/batch";
+        URL_TO_POST = "http://localhost:56423/batch";
 
     fetch(URL_TO_POST, {
         method: 'POST',
