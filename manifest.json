@@ -28,8 +28,6 @@
   ],
   
   "icons": {
-    "16": "./src/resources/icons/icon16.png",
-    "48": "./src/resources/icons/icon48.png",
-    "128": "./src/resources/icons/icon128.png"
+    "128": "./src/resources/icons/logo.png"
   }
 }
