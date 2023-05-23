@@ -3,10 +3,10 @@
 const postLinks = (data, isBatch) => {
     console.log(data)
 
-    let URL_TO_POST = "http://localhost:1354/single";
+    let URL_TO_POST = "http://127.0.0.1:56423/single";
 
     if (isBatch)
-        URL_TO_POST = "http://localhost:1354/batch";
+        URL_TO_POST = "http://127.0.0.1:56423/batch";
 
     fetch(URL_TO_POST, {
         method: 'POST',
@@ -53,7 +53,7 @@ const downloadTrigger = (downloadItem, suggest) => {
         chrome.downloads.cancel(downloadItem.id, () =>
             chrome.downloads.erase({id: downloadItem.id})
         );
-
+		console.log(url);
         fetch(url)
             .then( async (response) => {
 
@@ -66,8 +66,13 @@ const downloadTrigger = (downloadItem, suggest) => {
                     resumable: response.headers.get('accept-ranges') === "bytes",
                     agent: null
                 };
-                const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: "getUserAgent", data});
-                postLinks(resData.data, false);
+                // Send message to content script only if URL matches the tab's URL
+				if (url === tabs[0].url) {
+					const resData = await chrome.tabs.sendMessage(tabs[0].id, { type: 'getUserAgent', data });
+					postLinks(resData.data, false);
+				} else {
+					postLinks(data, false);
+				}
             })
             .catch((error) => {
                 console.error(error);
