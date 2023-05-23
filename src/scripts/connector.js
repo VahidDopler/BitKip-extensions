@@ -67,12 +67,12 @@ const downloadTrigger = (downloadItem, suggest) => {
                     agent: null
                 };
                 // Send message to content script only if URL matches the tab's URL
-				if (url === tabs[0].url) {
-					const resData = await chrome.tabs.sendMessage(tabs[0].id, { type: 'getUserAgent', data });
-					postLinks(resData.data, false);
-				} else {
-					postLinks(data, false);
-				}
+            if (url === tabs[0].url) {
+                const resData = await chrome.tabs.sendMessage(tabs[0].id, { type: 'getUserAgent', data });
+                postLinks(resData.data, false);
+            } else {
+                postLinks(data, false);
+            }
             })
             .catch((error) => {
                 console.error(error);
