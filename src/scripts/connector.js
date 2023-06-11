@@ -51,20 +51,13 @@ const downloadTrigger = async (downloadItem, suggest) => {
         chrome.downloads.cancel(downloadItem.id, () =>
             chrome.downloads.erase({id: downloadItem.id})
         );
-        console.log(url);
-        const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
         let data = {
             url,
             filename: downloadItem.filename,
             fileSize: downloadItem.fileSize,
             mimeType: downloadItem.mime,
-            agent: null
+            agent: navigator.userAgent
         };
-        // Send message to content script only if URL matches the tab's URL
-        if (url === tabs[0].url) {
-            const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: 'getUserAgent', data});
-            data = resData.data;
-        }
         postLinks(data, false);
     }
 

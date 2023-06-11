@@ -20,10 +20,6 @@ const listen = (message, sender, sendResponse) => {
         case "extractLinksWithRegex":
             extractLinksWithRegex(parameter);
             break;
-        case "getUserAgent":
-            message.data.agent = window.navigator.userAgent;
-            sendResponse(message);
-            break;
     }
 };
 
@@ -38,8 +34,6 @@ const extractSimilarLinks = ({linkPattern, baseUrl, sendResponse}) => {
 
 
 const extractLinksWithRegex = ({linkPattern, baseUrl, sendResponse}) => {
-    console.log(linkPattern);
-    console.log(escapeRegExp(linkPattern));
     const reg = new RegExp(escapeRegExp(linkPattern));
     const links = [];
     const allLinks = document.querySelectorAll('a');
