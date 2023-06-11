@@ -3,9 +3,9 @@
 const postLinks = (data, isBatch) => {
     console.log(data)
 
-    let URL_TO_POST = "http://localhost:56423/single";
+    let URL_TO_POST = "http://localhost:9563/single";
     if (isBatch)
-        URL_TO_POST = "http://localhost:56423/batch";
+        URL_TO_POST = "http://localhost:9563/batch";
     fetch(URL_TO_POST, {
         method: 'POST',
         body: JSON.stringify(data),
@@ -39,7 +39,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 });
 
 
-const downloadTrigger = (downloadItem, suggest) => {
+const downloadTrigger = async (downloadItem, suggest) => {
     // Prevent the download from starting
     // get download link from Chrome Api
     // final url is used when url itself is a redirecting link
@@ -52,28 +52,20 @@ const downloadTrigger = (downloadItem, suggest) => {
             chrome.downloads.erase({id: downloadItem.id})
         );
         console.log(url);
-        fetch(url)
-            .then(async (response) => {
-
-                const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
-                let data = {
-                    url,
-                    filename: downloadItem.filename,
-                    fileSize: downloadItem.fileSize,
-                    mimeType: downloadItem.mime,
-                    resumable: response.headers.get('accept-ranges') === "bytes",
-                    agent: null
-                };
-                // Send message to content script only if URL matches the tab's URL
-                if (url === tabs[0].url) {
-                    const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: 'getUserAgent', data});
-                    data = resData.data;
-                }
-                postLinks(data, false);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
+        let data = {
+            url,
+            filename: downloadItem.filename,
+            fileSize: downloadItem.fileSize,
+            mimeType: downloadItem.mime,
+            agent: null
+        };
+        // Send message to content script only if URL matches the tab's URL
+        if (url === tabs[0].url) {
+            const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: 'getUserAgent', data});
+            data = resData.data;
+        }
+        postLinks(data, false);
     }
 
 }

@@ -38,11 +38,17 @@ const extractSimilarLinks = ({linkPattern, baseUrl, sendResponse}) => {
 
 
 const extractLinksWithRegex = ({linkPattern, baseUrl, sendResponse}) => {
-    const reg = new RegExp(linkPattern);
+    console.log(linkPattern);
+    console.log(escapeRegExp(linkPattern));
+    const reg = new RegExp(escapeRegExp(linkPattern));
     const links = [];
     const allLinks = document.querySelectorAll('a');
     for (let a of allLinks)
         if (reg.test(a.href))
             links.push(a.href);
     sendResponse({links, baseUrl});
+}
+
+const escapeRegExp = (reg) => {
+    return reg.replace(/[()+?/.|#\s]/g, '\\$&');
 }
