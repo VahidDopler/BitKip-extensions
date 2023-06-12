@@ -2,7 +2,9 @@ const similarOption = document.getElementById('similarOption');
 const regexOption = document.getElementById('regexOption');
 const linkInput = document.getElementById('linkInput');
 const portInput = document.getElementById('portInput');
+const extractBtn = document.getElementById('extractBtn');
 const savePortBtn = document.getElementById('savePortBtn');
+const enableCheck = document.getElementById('enableCheck');
 
 const extract = () => {
     const linkPattern = linkInput.value;
@@ -30,8 +32,27 @@ regexOption.addEventListener('change', () => {
 
 
 chrome.storage.sync.get("port", (result) => portInput.value = result.port)
+chrome.storage.local.get("enabled", (result) => {
+    enableCheck.checked = result.enabled;
+    disableControls();
+});
 
+
+enableCheck.onchange = () => {
+    chrome.storage.local.set({enabled: enableCheck.checked});
+    disableControls();
+}
 savePortBtn.onclick = () => {
     chrome.storage.sync.set({port: portInput.value});
-    console.log("here")
 };
+
+const disableControls = () => {
+    document.querySelectorAll("form")
+        .forEach(form => {
+            for (const el of form.elements)
+                el.disabled = !enableCheck.checked;
+        })
+    savePortBtn.disabled = !enableCheck.checked;
+    extractBtn.disabled = !enableCheck.checked;
+}
+

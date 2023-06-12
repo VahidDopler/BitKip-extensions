@@ -1,7 +1,8 @@
 {
   "name": "BitKip extension",
   "action": {
-    "default_popup": "./src/resources/popup.html"
+    "default_popup": "./src/resources/popup.html",
+    "icon" : "./src/resources/icons/logo.png"
   },
   "manifest_version": 3,
   "version": "1.0",
@@ -12,6 +13,7 @@
     "webRequest",
     "tabs",
     "storage",
+    "notifications",
     "contextMenus",
     "scripting"
   ],
