@@ -31,4 +31,7 @@ regexOption.addEventListener('change', () => {
 
 chrome.storage.sync.get("port", (result) => portInput.value = result.port)
 
-savePortBtn.onclick = () => chrome.storage.sync.set({port: portInput.value});
+savePortBtn.onclick = () => {
+    chrome.storage.sync.set({port: portInput.value});
+    console.log("here")
+};

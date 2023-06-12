@@ -1,6 +1,8 @@
 {
   "name": "BitKip extension",
-  "action": {},
+  "action": {
+    "default_popup": "./src/resources/popup.html"
+  },
   "manifest_version": 3,
   "version": "1.0",
   "description": "Works with BitKip application",

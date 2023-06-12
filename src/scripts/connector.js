@@ -2,17 +2,19 @@
 
 let port = 9563;
 
-const isObjectEmpty = (objectName) => {
-    return JSON.stringify(objectName) === "{}";
-};
-chrome.storage.sync.get(["port"])
-    .then((result) => {
-        if (isObjectEmpty(result) || result === undefined) chrome.storage.sync.set({port});
-        else port = result.port;
-    });
-const postLinks = (data, isBatch) => {
-    console.log(data)
 
+const updatePort = () => {
+    chrome.storage.sync.get(["port"])
+        .then((result) => {
+            if (isObjectEmpty(result) || result === undefined) chrome.storage.sync.set({port});
+            else port = result.port;
+        });
+}
+
+updatePort();
+const postLinks = async (data, isBatch) => {
+    console.log(data)
+    await updatePort()
     let URL_TO_POST = `http://localhost:${port}/single`;
     if (isBatch)
         URL_TO_POST = `http://localhost:${port}/batch`;
@@ -84,17 +86,26 @@ chrome.downloads.onDeterminingFilename.addListener(downloadTrigger);
 
 //Add BitKip right-click menu listener to browser page
 chrome.contextMenus.onClicked.addListener((info) => {
-    if (isSupportedProtocol(info.linkUrl))
-        chrome.downloads.download({url: info.linkUrl})
+    if (info.menuItemId === "extract_selected_link") {
+        if (isSupportedProtocol(info.linkUrl))
+            chrome.downloads.download({url: info.linkUrl})
+    }/* else if (info.menuItemId === "batch_extract")
+        chrome.action.openPopup();
+    */
 });
 
 //Adding menus to right-click
 chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
-        id: 'extract_selected_link',
+        id: '',
         title: 'Download this link',
         contexts: ['all'],
     });
+    // chrome.contextMenus.create({
+    //     id: 'batch_extract',
+    //     title: 'Extract links',
+    //     contexts: ['all'],
+    // });
 });
 
 
@@ -105,4 +116,7 @@ const isSupportedProtocol = (url) => {
     return u.protocol === 'http:' || u.protocol === 'https:';
 }
 
-chrome.action.setPopup({popup: './src/resources/popup.html'});
+
+const isObjectEmpty = (objectName) => {
+    return JSON.stringify(objectName) === "{}";
+};
