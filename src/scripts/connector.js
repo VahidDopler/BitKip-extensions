@@ -1,15 +1,28 @@
 'use strict';
 
+let port = 9563;
+
+const isObjectEmpty = (objectName) => {
+    return JSON.stringify(objectName) === "{}";
+};
+chrome.storage.sync.get(["port"])
+    .then((result) => {
+        if (isObjectEmpty(result) || result === undefined) chrome.storage.sync.set({port});
+        else port = result.port;
+    });
 const postLinks = (data, isBatch) => {
     console.log(data)
 
-    let URL_TO_POST = "http://localhost:9563/single";
+    let URL_TO_POST = `http://localhost:${port}/single`;
     if (isBatch)
-        URL_TO_POST = "http://localhost:9563/batch";
+        URL_TO_POST = `http://localhost:${port}/batch`;
     fetch(URL_TO_POST, {
         method: 'POST',
         body: JSON.stringify(data),
-    }).then(_ => {
+    }).then(res => {
+        console.log(res);
+    }).catch(e => {
+        console.log(e);
     });
 }
 
@@ -34,7 +47,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
             const resData = await chrome.tabs.sendMessage(tabs[0].id, message);
             postLinks(resData, true)
-            break
+            break;
+        case "setPort":
+            chrome.storage.sync.set({port: message.value});
+            break;
     }
 });
 
@@ -89,4 +105,4 @@ const isSupportedProtocol = (url) => {
     return u.protocol === 'http:' || u.protocol === 'https:';
 }
 
-chrome.action.setPopup({popup: './src/resources/extension.html'});
+chrome.action.setPopup({popup: './src/resources/popup.html'});

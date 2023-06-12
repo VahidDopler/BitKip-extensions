@@ -7,12 +7,10 @@
   "host_permissions": ["*://*/*"],
   "permissions": [
     "downloads",
-    "cookies",
     "webRequest",
     "tabs",
     "storage",
     "contextMenus",
-    "alarms",
     "scripting"
   ],
   "background": {
