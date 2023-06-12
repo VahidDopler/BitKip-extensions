@@ -1,15 +1,30 @@
 'use strict';
 
-const postLinks = (data, isBatch) => {
-    console.log(data)
+let port = 9563;
 
-    let URL_TO_POST = "http://localhost:56423/single";
+
+const updatePort = () => {
+    chrome.storage.sync.get(["port"])
+        .then((result) => {
+            if (isObjectEmpty(result) || result === undefined) chrome.storage.sync.set({port});
+            else port = result.port;
+        });
+}
+
+updatePort();
+const postLinks = async (data, isBatch) => {
+    console.log(data)
+    await updatePort()
+    let URL_TO_POST = `http://localhost:${port}/single`;
     if (isBatch)
-        URL_TO_POST = "http://localhost:56423/batch";
+        URL_TO_POST = `http://localhost:${port}/batch`;
     fetch(URL_TO_POST, {
         method: 'POST',
         body: JSON.stringify(data),
-    }).then(_ => {
+    }).then(res => {
+        console.log(res);
+    }).catch(e => {
+        console.log(e);
     });
 }
 
@@ -34,12 +49,15 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
             const resData = await chrome.tabs.sendMessage(tabs[0].id, message);
             postLinks(resData, true)
-            break
+            break;
+        case "setPort":
+            chrome.storage.sync.set({port: message.value});
+            break;
     }
 });
 
 
-const downloadTrigger = (downloadItem, suggest) => {
+const downloadTrigger = async (downloadItem, suggest) => {
     // Prevent the download from starting
     // get download link from Chrome Api
     // final url is used when url itself is a redirecting link
@@ -51,29 +69,14 @@ const downloadTrigger = (downloadItem, suggest) => {
         chrome.downloads.cancel(downloadItem.id, () =>
             chrome.downloads.erase({id: downloadItem.id})
         );
-        console.log(url);
-        fetch(url)
-            .then(async (response) => {
-
-                const tabs = await chrome.tabs.query({active: true, currentWindow: true, lastFocusedWindow: true});
-                let data = {
-                    url,
-                    filename: downloadItem.filename,
-                    fileSize: downloadItem.fileSize,
-                    mimeType: downloadItem.mime,
-                    resumable: response.headers.get('accept-ranges') === "bytes",
-                    agent: null
-                };
-                // Send message to content script only if URL matches the tab's URL
-                if (url === tabs[0].url) {
-                    const resData = await chrome.tabs.sendMessage(tabs[0].id, {type: 'getUserAgent', data});
-                    data = resData.data;
-                }
-                postLinks(data, false);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        let data = {
+            url,
+            filename: downloadItem.filename,
+            fileSize: downloadItem.fileSize,
+            mimeType: downloadItem.mime,
+            agent: navigator.userAgent
+        };
+        postLinks(data, false);
     }
 
 }
@@ -83,17 +86,26 @@ chrome.downloads.onDeterminingFilename.addListener(downloadTrigger);
 
 //Add BitKip right-click menu listener to browser page
 chrome.contextMenus.onClicked.addListener((info) => {
-    if (isSupportedProtocol(info.linkUrl))
-        chrome.downloads.download({url: info.linkUrl})
+    if (info.menuItemId === "extract_selected_link") {
+        if (isSupportedProtocol(info.linkUrl))
+            chrome.downloads.download({url: info.linkUrl})
+    }/* else if (info.menuItemId === "batch_extract")
+        chrome.action.openPopup();
+    */
 });
 
 //Adding menus to right-click
 chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
-        id: 'extract_selected_link',
+        id: '',
         title: 'Download this link',
         contexts: ['all'],
     });
+    // chrome.contextMenus.create({
+    //     id: 'batch_extract',
+    //     title: 'Extract links',
+    //     contexts: ['all'],
+    // });
 });
 
 
@@ -104,4 +116,7 @@ const isSupportedProtocol = (url) => {
     return u.protocol === 'http:' || u.protocol === 'https:';
 }
 
-chrome.action.setPopup({popup: './src/resources/extension.html'});
+
+const isObjectEmpty = (objectName) => {
+    return JSON.stringify(objectName) === "{}";
+};
