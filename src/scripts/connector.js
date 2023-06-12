@@ -61,6 +61,8 @@ const downloadTrigger = async (downloadItem, suggest) => {
     // Prevent the download from starting
     // get download link from Chrome Api
     // final url is used when url itself is a redirecting link
+    if (downloadItem.mime.includes("image"))
+        return;
     let url = downloadItem.finalUrl || downloadItem.url;
     console.log(downloadItem)
     // only cancel urls if are supported
