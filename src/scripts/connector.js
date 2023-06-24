@@ -1,6 +1,7 @@
 'use strict';
 
 let port = 9563;
+let enabled = true;
 
 
 const updatePort = () => {
@@ -11,7 +12,16 @@ const updatePort = () => {
         });
 }
 
-updatePort();
+const updateEnable = async () => {
+    await chrome.storage.local.get(["enabled"])
+        .then(res => {
+            if (isObjectEmpty(res) || res === undefined) chrome.storage.local.set({enabled});
+            else enabled = res.enabled;
+        });
+}
+
+updatePort()
+updateEnable()
 const postLinks = async (data, isBatch) => {
     console.log(data)
     await updatePort()
@@ -23,8 +33,13 @@ const postLinks = async (data, isBatch) => {
         body: JSON.stringify(data),
     }).then(res => {
         console.log(res);
-    }).catch(e => {
-        console.log(e);
+    }).catch(_ => {
+        chrome.notifications.create('', {
+            title: 'BitKip Extension',
+            message: "Can't send url to BitKip, Is application running on the same port?",
+            iconUrl: '../resources/icons/logo.png',
+            type: 'basic'
+        });
     });
 }
 
@@ -57,15 +72,15 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
 });
 
 
-const downloadTrigger = async (downloadItem, suggest) => {
-    // Prevent the download from starting
-    // get download link from Chrome Api
+// Prevent the download from starting
+// get download link from Chrome Api
+const triggerDownload = (downloadItem, suggest) => {
     // final url is used when url itself is a redirecting link
-    if (downloadItem.mime.includes("image"))
+    updateEnable();
+    if (!enabled || downloadItem.mime.includes("image"))
         return;
     let url = downloadItem.finalUrl || downloadItem.url;
     console.log(downloadItem)
-    // only cancel urls if are supported
     if (isSupportedProtocol(url)) {
         suggest({cancel: true, filename: downloadItem.filename});
         chrome.downloads.cancel(downloadItem.id, () =>
@@ -80,11 +95,10 @@ const downloadTrigger = async (downloadItem, suggest) => {
         };
         postLinks(data, false);
     }
-
 }
 
 //Main code to maintain download link and start doing job
-chrome.downloads.onDeterminingFilename.addListener(downloadTrigger);
+chrome.downloads.onDeterminingFilename.addListener(triggerDownload);
 
 //Add BitKip right-click menu listener to browser page
 chrome.contextMenus.onClicked.addListener((info) => {
